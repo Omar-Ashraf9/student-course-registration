@@ -63,20 +63,4 @@ public class Student {
   // @BatchSize(size = 10)           // EAGER + BATCH: fetch immediately, batched
   
   private List<Enrollment> enrollments = new ArrayList<>();
-
-  public static String formatEnrollments(List<Enrollment> enrollments) {
-    if (enrollments == null || enrollments.isEmpty()) {
-      return "No enrollments";
-    }
-
-    return enrollments.stream()
-        .map(e -> String.format(
-            "Enrollment{id=%d, course=%s, status=%s, date=%s}",
-            e.getId(),
-            e.getCourse() != null ? e.getCourse().getId() : "N/A",
-            e.getStatus(),
-            e.getEnrollmentDate()
-        ))
-        .collect(java.util.stream.Collectors.joining(System.lineSeparator(), "[\n", "\n]"));
-  }
 }

@@ -1,8 +1,8 @@
 package com.vois.internship.studentcourseregistration.controller;
 
-import com.vois.internship.studentcourseregistration.dto.CreateStudentRequest;
-import com.vois.internship.studentcourseregistration.dto.StudentResponse;
-import com.vois.internship.studentcourseregistration.service.StudentService;
+import com.vois.internship.studentcourseregistration.dto.CourseResponse;
+import com.vois.internship.studentcourseregistration.dto.CreateCourseRequest;
+import com.vois.internship.studentcourseregistration.service.CourseService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,26 +16,27 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/courses")
 @RequiredArgsConstructor
-public class StudentController {
+public class CourseController {
 
-  private final StudentService studentService;
+  private final CourseService courseService;
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public StudentResponse registerStudent(@Valid @RequestBody CreateStudentRequest request) {
-    return studentService.registerStudent(request);
+  public CourseResponse createCourse(@Valid @RequestBody CreateCourseRequest request) {
+    return courseService.createCourse(request);
   }
 
   @GetMapping
-  public List<StudentResponse> getAllStudents() {
-    return studentService.getAllStudents();
+  public List<CourseResponse> getAllCourses() {
+    return courseService.getAllCourses();
   }
 
   @GetMapping("/{id}")
-  public StudentResponse getStudentById(@PathVariable Long id) {
-    return studentService.getStudentById(id);
+  public CourseResponse getCourseById(@PathVariable Long id) {
+    return courseService.getCourseById(id);
   }
+
+  // add: replace - update - delete
 }
-// add: replace - update - delete

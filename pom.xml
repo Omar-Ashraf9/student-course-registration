@@ -29,6 +29,7 @@
   <properties>
     <java.version>21</java.version>
     <mapstruct.version>1.6.3</mapstruct.version>
+    <openapi-generator.version>7.24.0</openapi-generator.version>
   </properties>
   <dependencies>
     <dependency>
@@ -64,6 +65,16 @@
       <version>${mapstruct.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.openapitools</groupId>
+      <artifactId>jackson-databind-nullable</artifactId>
+      <version>0.2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.20</version>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa-test</artifactId>
       <scope>test</scope>
@@ -82,6 +93,79 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>${openapi-generator.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/openapi/student-management.yaml</inputSpec>
+              <generatorName>spring</generatorName>
+              
+              <!-- Use existing project package names -->
+              <apiPackage>com.vois.internship.studentcourseregistration.api</apiPackage>
+              <modelPackage>com.vois.internship.studentcourseregistration.dto</modelPackage>
+              
+              <generateSupportingFiles>false</generateSupportingFiles>
+              
+              <configOptions>
+                <!-- Generate only interfaces, controllers will implement them -->
+                <interfaceOnly>true</interfaceOnly>
+                
+                <!-- Skip default interface implementation -->
+                <skipDefaultInterface>true</skipDefaultInterface>
+                
+                <!-- Use tags for API organization -->
+                <useTags>true</useTags>
+                
+                <!-- Spring Boot 4 support -->
+                <useSpringBoot4>true</useSpringBoot4>
+                
+                <!-- Enable Bean Validation annotations -->
+                <useBeanValidation>true</useBeanValidation>
+                
+                <!-- Use ResponseEntity return types -->
+                <useResponseEntity>true</useResponseEntity>
+                
+                <!-- Disable OpenAPI Nullable wrapper -->
+                <openApiNullable>false</openApiNullable>
+                
+                <!-- No additional annotation library -->
+                <annotationLibrary>none</annotationLibrary>
+                
+                <!-- No documentation provider -->
+                <documentationProvider>none</documentationProvider>
+                
+                <!-- Hide generation timestamp for clean diffs -->
+                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+              </configOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>add-generated-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/openapi/src/main/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

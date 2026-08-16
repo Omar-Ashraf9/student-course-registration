@@ -1,13 +1,11 @@
 package com.vois.internship.studentcourseregistration.controller;
 
-import com.vois.internship.studentcourseregistration.dto.EnrollStudentRequest;
+import com.vois.internship.studentcourseregistration.dto.CreateEnrollmentRequest;
 import com.vois.internship.studentcourseregistration.dto.EnrollmentResponse;
 import com.vois.internship.studentcourseregistration.service.EnrollmentService;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +23,7 @@ public class EnrollmentController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public EnrollmentResponse enrollStudent(@Valid @RequestBody EnrollStudentRequest request) {
+  public EnrollmentResponse enrollStudent(@Valid @RequestBody CreateEnrollmentRequest request) {
     return enrollmentService.enrollStudent(request);
   }
 

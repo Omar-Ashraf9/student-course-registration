@@ -2,9 +2,13 @@ package com.vois.internship.studentcourseregistration.service.impl;
 
 import com.vois.internship.studentcourseregistration.dto.CourseResponse;
 import com.vois.internship.studentcourseregistration.dto.CreateCourseRequest;
+import com.vois.internship.studentcourseregistration.dto.PatchCourseRequest;
+import com.vois.internship.studentcourseregistration.dto.UpdateCourseRequest;
 import com.vois.internship.studentcourseregistration.entities.Course;
 import com.vois.internship.studentcourseregistration.exception.CourseNotFoundException;
 import com.vois.internship.studentcourseregistration.exception.DuplicateCourseException;
+import com.vois.internship.studentcourseregistration.exception.ResourceDeletionConflictException;
+import com.vois.internship.studentcourseregistration.mapper.CourseMapper;
 import com.vois.internship.studentcourseregistration.repository.CourseRepository;
 import com.vois.internship.studentcourseregistration.service.CourseService;
 import java.util.List;
@@ -17,36 +21,32 @@ import org.springframework.transaction.annotation.Transactional;
 public class CourseServiceImpl implements CourseService {
 
   private final CourseRepository courseRepository;
+  private final CourseMapper courseMapper;
 
   @Override
   @Transactional
   public CourseResponse createCourse(CreateCourseRequest request) {
     // Check for duplicate course code
-    if (courseRepository.existsByCode(request.code())) {
-      throw new DuplicateCourseException(request.code());
+    if (courseRepository.existsByCode(request.getCode())) {
+      throw new DuplicateCourseException(request.getCode());
     }
 
-    // Validate capacity (although @Min annotation already checks this at controller level)
-    if (request.capacity() <= 0) {
+    // Validate capacity (although Bean Validation already checks this at controller level)
+    if (request.getCapacity() <= 0) {
       throw new IllegalArgumentException("Capacity must be greater than 0");
     }
 
     // Create and save course
-    Course course = new Course();
-    course.setCode(request.code());
-    course.setTitle(request.title());
-    course.setDescription(request.description());
-    course.setCapacity(request.capacity());
-
+    Course course = courseMapper.toEntity(request);
     Course savedCourse = courseRepository.save(course);
-    return toResponse(savedCourse);
+    return courseMapper.toResponse(savedCourse);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<CourseResponse> getAllCourses() {
     return courseRepository.findAll().stream()
-        .map(this::toResponse)
+        .map(courseMapper::toResponse)
         .toList();
   }
 
@@ -55,16 +55,46 @@ public class CourseServiceImpl implements CourseService {
   public CourseResponse getCourseById(Long id) {
     Course course = courseRepository.findById(id)
         .orElseThrow(() -> new CourseNotFoundException(id));
-    return toResponse(course);
+    return courseMapper.toResponse(course);
   }
 
-  private CourseResponse toResponse(Course course) {
-    return new CourseResponse(
-        course.getId(),
-        course.getCode(),
-        course.getTitle(),
-        course.getDescription(),
-        course.getCapacity()
-    );
+  @Override
+  @Transactional
+  public CourseResponse updateCourse(Long id, UpdateCourseRequest request) {
+    Course course = courseRepository.findById(id)
+        .orElseThrow(() -> new CourseNotFoundException(id));
+
+    courseMapper.updateEntityFromUpdateRequest(request, course);
+    Course savedCourse = courseRepository.save(course);
+    return courseMapper.toResponse(savedCourse);
+  }
+
+  @Override
+  @Transactional
+  public CourseResponse patchCourse(Long id, PatchCourseRequest request) {
+    Course course = courseRepository.findById(id)
+        .orElseThrow(() -> new CourseNotFoundException(id));
+
+    courseMapper.patchEntity(request, course);
+    Course savedCourse = courseRepository.save(course);
+    return courseMapper.toResponse(savedCourse);
+  }
+
+  @Override
+  @Transactional
+  public void deleteCourse(Long id) {
+    Course course = courseRepository.findById(id)
+        .orElseThrow(() -> new CourseNotFoundException(id));
+
+    // Check for enrollment history
+    if (!course.getEnrollments().isEmpty()) {
+      throw new ResourceDeletionConflictException(
+          "Course",
+          id,
+          "Course has enrollment history. Cannot delete courses with enrollments."
+      );
+    }
+
+    courseRepository.deleteById(id);
   }
 }

@@ -1,7 +1,8 @@
 package com.vois.internship.studentcourseregistration.service.impl;
 
-import com.vois.internship.studentcourseregistration.dto.EnrollStudentRequest;
+import com.vois.internship.studentcourseregistration.dto.CreateEnrollmentRequest;
 import com.vois.internship.studentcourseregistration.dto.EnrollmentResponse;
+import com.vois.internship.studentcourseregistration.dto.PatchEnrollmentRequest;
 import com.vois.internship.studentcourseregistration.entities.Course;
 import com.vois.internship.studentcourseregistration.entities.Enrollment;
 import com.vois.internship.studentcourseregistration.entities.EnrollmentStatus;
@@ -10,7 +11,9 @@ import com.vois.internship.studentcourseregistration.exception.CourseFullExcepti
 import com.vois.internship.studentcourseregistration.exception.CourseNotFoundException;
 import com.vois.internship.studentcourseregistration.exception.DuplicateEnrollmentException;
 import com.vois.internship.studentcourseregistration.exception.EnrollmentNotFoundException;
+import com.vois.internship.studentcourseregistration.exception.InvalidEnrollmentStateException;
 import com.vois.internship.studentcourseregistration.exception.StudentNotFoundException;
+import com.vois.internship.studentcourseregistration.mapper.EnrollmentMapper;
 import com.vois.internship.studentcourseregistration.repository.CourseRepository;
 import com.vois.internship.studentcourseregistration.repository.EnrollmentRepository;
 import com.vois.internship.studentcourseregistration.repository.StudentRepository;
@@ -28,28 +31,27 @@ public class EnrollmentServiceImpl implements EnrollmentService {
   private final EnrollmentRepository enrollmentRepository;
   private final StudentRepository studentRepository;
   private final CourseRepository courseRepository;
+  private final EnrollmentMapper enrollmentMapper;
 
   @Override
   @Transactional
-  public EnrollmentResponse enrollStudent(EnrollStudentRequest request) {
+  public EnrollmentResponse enrollStudent(CreateEnrollmentRequest request) {
     // Verify student exists
-    Student student = studentRepository.findById(request.studentId())
-        .orElseThrow(() -> new StudentNotFoundException(request.studentId()));
+    Student student = studentRepository.findById(request.getStudentId())
+        .orElseThrow(() -> new StudentNotFoundException(request.getStudentId()));
 
     // Verify course exists
-    Course course = courseRepository.findById(request.courseId())
-        .orElseThrow(() -> new CourseNotFoundException(request.courseId()));
+    Course course = courseRepository.findById(request.getCourseId())
+        .orElseThrow(() -> new CourseNotFoundException(request.getCourseId()));
 
     // Check for duplicate enrollment
-    if (enrollmentRepository.existsByStudent_IdAndCourse_Id(request.studentId(), request.courseId())) {
-      throw new DuplicateEnrollmentException(request.studentId(), request.courseId());
+    if (enrollmentRepository.existsByStudent_IdAndCourse_Id(request.getStudentId(), request.getCourseId())) {
+      throw new DuplicateEnrollmentException(request.getStudentId(), request.getCourseId());
     }
 
     // Check course capacity (count only ACTIVE enrollments)
-    // Note: In a production system, concurrent enrollment requests may require 
-    // locking or another concurrency-control mechanism to prevent overbooking.
     long activeEnrollments = enrollmentRepository.countByCourse_IdAndStatus(
-        request.courseId(), 
+        request.getCourseId(), 
         EnrollmentStatus.ACTIVE
     );
     
@@ -65,7 +67,23 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     enrollment.setStatus(EnrollmentStatus.ACTIVE);
 
     Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-    return toResponse(savedEnrollment);
+    return enrollmentMapper.toResponse(savedEnrollment);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<EnrollmentResponse> getAllEnrollments() {
+    return enrollmentRepository.findAll().stream()
+        .map(enrollmentMapper::toResponse)
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public EnrollmentResponse getEnrollmentById(Long id) {
+    Enrollment enrollment = enrollmentRepository.findById(id)
+        .orElseThrow(() -> new EnrollmentNotFoundException(id));
+    return enrollmentMapper.toResponse(enrollment);
   }
 
   @Override
@@ -77,12 +95,31 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     return enrollmentRepository.findByStudent_Id(studentId).stream()
-        .map(this::toResponse)
+        .map(enrollmentMapper::toResponse)
         .toList();
   }
 
   @Override
   @Transactional
+  public EnrollmentResponse patchEnrollment(Long id, PatchEnrollmentRequest request) {
+    Enrollment enrollment = enrollmentRepository.findById(id)
+        .orElseThrow(() -> new EnrollmentNotFoundException(id));
+
+    // Validate state transitions if status is being changed
+    if (request.getStatus() != null) {
+      // Convert DTO StatusEnum to entity EnrollmentStatus
+      EnrollmentStatus newStatus = EnrollmentStatus.valueOf(request.getStatus().name());
+      validateStateTransition(enrollment.getStatus(), newStatus);
+    }
+
+    enrollmentMapper.patchEntity(request, enrollment);
+    Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+    return enrollmentMapper.toResponse(savedEnrollment);
+  }
+
+  @Override
+  @Transactional
+  @Deprecated
   public EnrollmentResponse withdrawEnrollment(Long enrollmentId) {
     Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
         .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
@@ -91,22 +128,39 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     enrollment.setStatus(EnrollmentStatus.WITHDRAWN);
     Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
 
-    return toResponse(updatedEnrollment);
+    return enrollmentMapper.toResponse(updatedEnrollment);
   }
 
-  private EnrollmentResponse toResponse(Enrollment enrollment) {
-    Student student = enrollment.getStudent();
-    Course course = enrollment.getCourse();
+  /**
+   * Validate enrollment status transitions.
+   * Basic rules:
+   * - ACTIVE can transition to WITHDRAWN or COMPLETED
+   * - WITHDRAWN and COMPLETED are terminal states (no further transitions)
+   */
+  private void validateStateTransition(EnrollmentStatus currentStatus, EnrollmentStatus newStatus) {
+    if (currentStatus == newStatus) {
+      return; // Same status, no transition needed
+    }
 
-    return new EnrollmentResponse(
-        enrollment.getId(),
-        student.getId(),
-        student.getFirstName() + " " + student.getLastName(),
-        course.getId(),
-        course.getCode(),
-        course.getTitle(),
-        enrollment.getStatus(),
-        enrollment.getEnrollmentDate()
-    );
+    switch (currentStatus) {
+      case ACTIVE:
+        // ACTIVE can transition to WITHDRAWN or COMPLETED
+        if (newStatus != EnrollmentStatus.WITHDRAWN && newStatus != EnrollmentStatus.COMPLETED) {
+          throw new InvalidEnrollmentStateException(
+              String.format("Cannot transition from %s to %s", currentStatus, newStatus)
+          );
+        }
+        break;
+
+      case WITHDRAWN:
+      case COMPLETED:
+        // Terminal states - no transitions allowed
+        throw new InvalidEnrollmentStateException(
+            String.format("Cannot change status from terminal state %s to %s", currentStatus, newStatus)
+        );
+
+      default:
+        throw new InvalidEnrollmentStateException("Unknown enrollment status: " + currentStatus);
+    }
   }
 }

@@ -21,6 +21,7 @@ import com.vois.internship.studentcourseregistration.service.EnrollmentService;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +34,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
   private final CourseRepository courseRepository;
   private final EnrollmentMapper enrollmentMapper;
 
+  /**
+   * Create enrollment.
+   * Allowed for:
+   * - ADMIN (any student)
+   * - STUDENT (self only - studentId must match principal.id)
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN') or #request.studentId == principal.id")
   @Transactional
   public EnrollmentResponse enrollStudent(CreateEnrollmentRequest request) {
     // Verify student exists
@@ -70,7 +78,11 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     return enrollmentMapper.toResponse(savedEnrollment);
   }
 
+  /**
+   * Get all enrollments - ADMIN ONLY.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional(readOnly = true)
   public List<EnrollmentResponse> getAllEnrollments() {
     return enrollmentRepository.findAll().stream()
@@ -78,7 +90,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         .toList();
   }
 
+  /**
+   * Get enrollment by ID.
+   * Allowed for:
+   * - ADMIN (any enrollment)
+   * - STUDENT (owns enrollment)
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN') or @authorizationService.ownsEnrollment(#id, principal.id)")
   @Transactional(readOnly = true)
   public EnrollmentResponse getEnrollmentById(Long id) {
     Enrollment enrollment = enrollmentRepository.findById(id)
@@ -86,7 +105,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     return enrollmentMapper.toResponse(enrollment);
   }
 
+  /**
+   * Get student enrollments.
+   * Allowed for:
+   * - ADMIN (any student)
+   * - STUDENT (self only)
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN') or #studentId == principal.id")
   @Transactional(readOnly = true)
   public List<EnrollmentResponse> getStudentEnrollments(Long studentId) {
     // Verify student exists
@@ -99,7 +125,17 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         .toList();
   }
 
+  /**
+   * Patch enrollment (update status).
+   * Allowed for:
+   * - ADMIN (any enrollment)
+   * - STUDENT (owns enrollment + allowed transitions)
+   * 
+   * Students can only perform withdrawal.
+   * Business logic validates allowed state transitions.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN') or @authorizationService.ownsEnrollment(#id, principal.id)")
   @Transactional
   public EnrollmentResponse patchEnrollment(Long id, PatchEnrollmentRequest request) {
     Enrollment enrollment = enrollmentRepository.findById(id)
@@ -117,6 +153,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     return enrollmentMapper.toResponse(savedEnrollment);
   }
 
+  /**
+   * Withdraw enrollment - DEPRECATED.
+   * Use patchEnrollment instead to change status to WITHDRAWN.
+   */
   @Override
   @Transactional
   @Deprecated

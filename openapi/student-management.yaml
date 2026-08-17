@@ -44,6 +44,8 @@ paths:
       tags: [Students]
       summary: List all students
       operationId: listStudents
+      security:
+        - basicAuth: []
       responses:
         '200':
           description: Successful operation
@@ -53,6 +55,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StudentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
         '500':
           $ref: '#/components/responses/InternalServerErrorResponse'
   /students/{studentId}:
@@ -523,6 +529,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ValidationErrorResponse'
+    UnauthorizedResponse:
+      description: Authentication failed - no credentials provided or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenResponse:
+      description: Authenticated but lacks required permissions for this operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     NotFoundResponse:
       description: Resource not found
       content:
@@ -861,3 +879,22 @@ components:
           type: object
           additionalProperties:
             type: string
+  
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: |
+        HTTP Basic Authentication using email as username and password.
+        
+        Format: Authorization: Basic base64(email:password)
+        
+        Example:
+        - Email: ahmed@example.com
+        - Password: password123
+        - Header: Authorization: Basic YWhtZWRAZXhhbXBsZS5jb206cGFzc3dvcmQxMjM=
+        
+        Roles:
+        - ROLE_STUDENT: Student user
+        - ROLE_ADMIN: Administrator user
+

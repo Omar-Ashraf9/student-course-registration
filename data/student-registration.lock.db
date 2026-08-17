@@ -1,6 +1,6 @@
 #FileLock
-#Sun Aug 16 23:18:27 UTC 2026
+#Mon Aug 17 13:26:09 EEST 2026
 hostName=E1570736.internal.vodafone.com
-id=1a00cde909c7687b73a0de4ef8576c678dc5544c642
+id=1a00f41d0f07700e99b676e8fde952658501a23746b
 method=file
-server=192.168.1.24\:61548
+server=10.114.227.165\:53324

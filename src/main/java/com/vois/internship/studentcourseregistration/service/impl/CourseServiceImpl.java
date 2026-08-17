@@ -13,6 +13,7 @@ import com.vois.internship.studentcourseregistration.repository.CourseRepository
 import com.vois.internship.studentcourseregistration.service.CourseService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,11 @@ public class CourseServiceImpl implements CourseService {
   private final CourseRepository courseRepository;
   private final CourseMapper courseMapper;
 
+  /**
+   * Create course - ADMIN ONLY.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public CourseResponse createCourse(CreateCourseRequest request) {
     // Check for duplicate course code
@@ -42,6 +47,10 @@ public class CourseServiceImpl implements CourseService {
     return courseMapper.toResponse(savedCourse);
   }
 
+  /**
+   * Get all courses - PUBLIC.
+   * No authorization required.
+   */
   @Override
   @Transactional(readOnly = true)
   public List<CourseResponse> getAllCourses() {
@@ -50,6 +59,10 @@ public class CourseServiceImpl implements CourseService {
         .toList();
   }
 
+  /**
+   * Get course by ID - PUBLIC.
+   * No authorization required.
+   */
   @Override
   @Transactional(readOnly = true)
   public CourseResponse getCourseById(Long id) {
@@ -58,7 +71,11 @@ public class CourseServiceImpl implements CourseService {
     return courseMapper.toResponse(course);
   }
 
+  /**
+   * Update course (PUT) - ADMIN ONLY.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public CourseResponse updateCourse(Long id, UpdateCourseRequest request) {
     Course course = courseRepository.findById(id)
@@ -69,7 +86,11 @@ public class CourseServiceImpl implements CourseService {
     return courseMapper.toResponse(savedCourse);
   }
 
+  /**
+   * Partially update course (PATCH) - ADMIN ONLY.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public CourseResponse patchCourse(Long id, PatchCourseRequest request) {
     Course course = courseRepository.findById(id)
@@ -80,7 +101,12 @@ public class CourseServiceImpl implements CourseService {
     return courseMapper.toResponse(savedCourse);
   }
 
+  /**
+   * Delete course - ADMIN ONLY.
+   * Business rule: prevent deletion if enrollment history exists.
+   */
   @Override
+  @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public void deleteCourse(Long id) {
     Course course = courseRepository.findById(id)

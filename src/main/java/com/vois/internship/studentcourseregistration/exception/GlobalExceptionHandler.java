@@ -1,6 +1,10 @@
 package com.vois.internship.studentcourseregistration.exception;
 
+import com.vois.internship.studentcourseregistration.dto.ErrorResponse;
+import com.vois.internship.studentcourseregistration.dto.ValidationErrorResponse;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -10,6 +14,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Global exception handler for REST API.
+ * Maps exceptions to appropriate HTTP responses using OpenAPI-generated error DTOs.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -17,8 +25,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleStudentNotFound(StudentNotFoundException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.NOT_FOUND.value(),
+        HttpStatus.NOT_FOUND.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
@@ -27,8 +36,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleCourseNotFound(CourseNotFoundException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.NOT_FOUND.value(),
+        HttpStatus.NOT_FOUND.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
@@ -37,8 +47,20 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleEnrollmentNotFound(EnrollmentNotFoundException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.NOT_FOUND.value(),
+        HttpStatus.NOT_FOUND.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
+    );
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
+
+  @ExceptionHandler(AdminNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleAdminNotFound(AdminNotFoundException ex) {
+    ErrorResponse error = new ErrorResponse(
+        HttpStatus.NOT_FOUND.value(),
+        HttpStatus.NOT_FOUND.getReasonPhrase(),
+        ex.getMessage(),
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
@@ -47,8 +69,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleDuplicateStudent(DuplicateStudentException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
@@ -57,8 +80,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleDuplicateCourse(DuplicateCourseException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
@@ -67,8 +91,20 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleDuplicateEnrollment(DuplicateEnrollmentException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
+    );
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+  }
+
+  @ExceptionHandler(DuplicateAdminException.class)
+  public ResponseEntity<ErrorResponse> handleDuplicateAdmin(DuplicateAdminException ex) {
+    ErrorResponse error = new ErrorResponse(
+        HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
+        ex.getMessage(),
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
@@ -77,18 +113,44 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleCourseFull(CourseFullException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+  }
+
+  @ExceptionHandler(ResourceDeletionConflictException.class)
+  public ResponseEntity<ErrorResponse> handleResourceDeletionConflict(
+      ResourceDeletionConflictException ex) {
+    ErrorResponse error = new ErrorResponse(
+        HttpStatus.CONFLICT.value(),
+        HttpStatus.CONFLICT.getReasonPhrase(),
+        ex.getMessage(),
+        toOffsetDateTime(Instant.now())
+    );
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+  }
+
+  @ExceptionHandler(InvalidEnrollmentStateException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidEnrollmentState(
+      InvalidEnrollmentStateException ex) {
+    ErrorResponse error = new ErrorResponse(
+        HttpStatus.BAD_REQUEST.value(),
+        HttpStatus.BAD_REQUEST.getReasonPhrase(),
+        ex.getMessage(),
+        toOffsetDateTime(Instant.now())
+    );
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.BAD_REQUEST.value(),
+        HttpStatus.BAD_REQUEST.getReasonPhrase(),
         ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
@@ -105,9 +167,10 @@ public class GlobalExceptionHandler {
 
     ValidationErrorResponse response = new ValidationErrorResponse(
         HttpStatus.BAD_REQUEST.value(),
+        HttpStatus.BAD_REQUEST.getReasonPhrase(),
         "Validation failed",
-        errors,
-        Instant.now()
+        toOffsetDateTime(Instant.now()),
+        errors
     );
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
@@ -116,22 +179,17 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
     ErrorResponse error = new ErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
         "An unexpected error occurred: " + ex.getMessage(),
-        Instant.now()
+        toOffsetDateTime(Instant.now())
     );
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
   }
 
-  public record ErrorResponse(
-      int status,
-      String message,
-      Instant timestamp
-  ) {}
-
-  public record ValidationErrorResponse(
-      int status,
-      String message,
-      Map<String, String> errors,
-      Instant timestamp
-  ) {}
+  /**
+   * Converts Instant to OffsetDateTime for generated DTOs.
+   */
+  private OffsetDateTime toOffsetDateTime(Instant instant) {
+    return instant.atOffset(ZoneOffset.UTC);
+  }
 }

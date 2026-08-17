@@ -1,41 +1,65 @@
 package com.vois.internship.studentcourseregistration.controller;
 
+import com.vois.internship.studentcourseregistration.api.StudentsApi;
 import com.vois.internship.studentcourseregistration.dto.CreateStudentRequest;
+import com.vois.internship.studentcourseregistration.dto.PatchStudentRequest;
 import com.vois.internship.studentcourseregistration.dto.StudentResponse;
+import com.vois.internship.studentcourseregistration.dto.UpdateStudentRequest;
 import com.vois.internship.studentcourseregistration.service.StudentService;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for Student operations.
+ * Implements the OpenAPI-generated StudentsApi interface.
+ */
 @RestController
-@RequestMapping("/students")
 @RequiredArgsConstructor
-public class StudentController {
+public class StudentController implements StudentsApi {
 
   private final StudentService studentService;
 
-  @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  public StudentResponse registerStudent(@Valid @RequestBody CreateStudentRequest request) {
-    return studentService.registerStudent(request);
+  @Override
+  public ResponseEntity<StudentResponse> createStudent(CreateStudentRequest createStudentRequest) {
+    StudentResponse response = studentService.registerStudent(createStudentRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  @GetMapping
-  public List<StudentResponse> getAllStudents() {
-    return studentService.getAllStudents();
+  @Override
+  public ResponseEntity<List<StudentResponse>> listStudents() {
+    List<StudentResponse> students = studentService.getAllStudents();
+    return ResponseEntity.ok(students);
   }
 
-  @GetMapping("/{id}")
-  public StudentResponse getStudentById(@PathVariable Long id) {
-    return studentService.getStudentById(id);
+  @Override
+  public ResponseEntity<StudentResponse> getStudentById(Long studentId) {
+    StudentResponse response = studentService.getStudentById(studentId);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<StudentResponse> updateStudent(
+      Long studentId, 
+      UpdateStudentRequest updateStudentRequest) {
+    StudentResponse response = studentService.updateStudent(studentId, updateStudentRequest);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<StudentResponse> patchStudent(
+      Long studentId, 
+      PatchStudentRequest patchStudentRequest) {
+    StudentResponse response = studentService.patchStudent(studentId, patchStudentRequest);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteStudent(Long studentId) {
+    studentService.deleteStudent(studentId);
+    return ResponseEntity.noContent().build();
   }
 }
 // add: replace - update - delete

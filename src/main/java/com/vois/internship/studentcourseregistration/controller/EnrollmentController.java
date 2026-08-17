@@ -1,37 +1,59 @@
 package com.vois.internship.studentcourseregistration.controller;
 
+import com.vois.internship.studentcourseregistration.api.EnrollmentsApi;
 import com.vois.internship.studentcourseregistration.dto.CreateEnrollmentRequest;
 import com.vois.internship.studentcourseregistration.dto.EnrollmentResponse;
+import com.vois.internship.studentcourseregistration.dto.PatchEnrollmentRequest;
 import com.vois.internship.studentcourseregistration.service.EnrollmentService;
-import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for Enrollment operations.
+ * Implements the OpenAPI-generated EnrollmentsApi interface.
+ */
 @RestController
-@RequestMapping("/enrollments")
 @RequiredArgsConstructor
-public class EnrollmentController {
+public class EnrollmentController implements EnrollmentsApi {
 
   private final EnrollmentService enrollmentService;
 
-  @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  public EnrollmentResponse enrollStudent(@Valid @RequestBody CreateEnrollmentRequest request) {
-    return enrollmentService.enrollStudent(request);
+  @Override
+  public ResponseEntity<EnrollmentResponse> createEnrollment(
+      CreateEnrollmentRequest createEnrollmentRequest) {
+    EnrollmentResponse response = enrollmentService.enrollStudent(createEnrollmentRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  @PatchMapping("/{id}/withdraw")
-  public EnrollmentResponse withdrawEnrollment(@PathVariable Long id) {
-    return enrollmentService.withdrawEnrollment(id);
+  @Override
+  public ResponseEntity<List<EnrollmentResponse>> listEnrollments() {
+    List<EnrollmentResponse> enrollments = enrollmentService.getAllEnrollments();
+    return ResponseEntity.ok(enrollments);
+  }
+
+  @Override
+  public ResponseEntity<EnrollmentResponse> getEnrollmentById(Long enrollmentId) {
+    EnrollmentResponse response = enrollmentService.getEnrollmentById(enrollmentId);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<List<EnrollmentResponse>> listStudentEnrollments(Long studentId) {
+    List<EnrollmentResponse> enrollments = enrollmentService.getStudentEnrollments(studentId);
+    return ResponseEntity.ok(enrollments);
+  }
+
+  @Override
+  public ResponseEntity<EnrollmentResponse> patchEnrollment(
+      Long enrollmentId, 
+      PatchEnrollmentRequest patchEnrollmentRequest) {
+    EnrollmentResponse response = enrollmentService.patchEnrollment(
+        enrollmentId, 
+        patchEnrollmentRequest
+    );
+    return ResponseEntity.ok(response);
   }
 }
-
-// find all enrollments
-// find enrollment by id

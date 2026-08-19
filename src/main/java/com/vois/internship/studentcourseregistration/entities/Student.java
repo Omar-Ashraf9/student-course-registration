@@ -1,14 +1,9 @@
 package com.vois.internship.studentcourseregistration.entities;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -17,32 +12,19 @@ import lombok.Setter;
 // import org.hibernate.annotations.Fetch;
 // import org.hibernate.annotations.FetchMode;
 // import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.AnyDiscriminatorImplicitValues.Strategy;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
+/**
+ * Student entity representing students in the course registration system.
+ * Extends AppUser with SINGLE_TABLE inheritance using discriminator value 'STUDENT'.
+ * 
+ * Student-specific attributes:
+ * - enrollments: Collection of course enrollments for this student
+ */
 @Entity
-@Table(name = "STUDENT")
+@DiscriminatorValue("STUDENT")
 @Getter
 @Setter
-public class Student {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "ID", nullable = false)
-  private Long id;
-
-  @Column(name = "FIRST_NAME", nullable = false, length = 100)
-  private String firstName;
-
-  @Column(name = "LAST_NAME", nullable = false, length = 100)
-  private String lastName;
-
-  @Column(name = "EMAIL", nullable = false)
-  private String email;
-
-  @Column(name = "REGISTRATION_DATE", nullable = false)
-  private Instant registrationDate;
+public class Student extends AppUser {
 
   @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
   // DEMO: Uncomment ONE of these to demonstrate fetching strategies:
@@ -63,20 +45,4 @@ public class Student {
   // @BatchSize(size = 10)           // EAGER + BATCH: fetch immediately, batched
   
   private List<Enrollment> enrollments = new ArrayList<>();
-
-  public static String formatEnrollments(List<Enrollment> enrollments) {
-    if (enrollments == null || enrollments.isEmpty()) {
-      return "No enrollments";
-    }
-
-    return enrollments.stream()
-        .map(e -> String.format(
-            "Enrollment{id=%d, course=%s, status=%s, date=%s}",
-            e.getId(),
-            e.getCourse() != null ? e.getCourse().getId() : "N/A",
-            e.getStatus(),
-            e.getEnrollmentDate()
-        ))
-        .collect(java.util.stream.Collectors.joining(System.lineSeparator(), "[\n", "\n]"));
-  }
 }

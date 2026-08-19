@@ -1,34 +1,61 @@
 package com.vois.internship.studentcourseregistration.service;
 
-import com.vois.internship.studentcourseregistration.dto.StudentDto;
-import com.vois.internship.studentcourseregistration.entities.Student;
-import com.vois.internship.studentcourseregistration.mapper.StudentMapper;
-import com.vois.internship.studentcourseregistration.repository.StudentRepository;
-import java.time.Instant;
+import com.vois.internship.studentcourseregistration.dto.CreateStudentRequest;
+import com.vois.internship.studentcourseregistration.dto.PatchStudentRequest;
+import com.vois.internship.studentcourseregistration.dto.StudentResponse;
+import com.vois.internship.studentcourseregistration.dto.UpdateStudentRequest;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
-@RequiredArgsConstructor
-public class StudentService {
+/**
+ * Service interface for Student operations.
+ */
+public interface StudentService {
 
-  private final StudentRepository studentRepository;
-  private final StudentMapper studentMapper;
+  /**
+   * Register a new student.
+   * @param request the student creation request
+   * @return the created student response
+   * @throws com.vois.internship.studentcourseregistration.exception.DuplicateStudentException if email already exists
+   */
+  StudentResponse registerStudent(CreateStudentRequest request);
 
-  public List<StudentDto> getAllStudents() {
-    return studentRepository.findAll().stream()
-        .map(studentMapper::toDto)
-        .toList();
-  }
+  /**
+   * Get all students.
+   * @return list of all students
+   */
+  List<StudentResponse> getAllStudents();
 
-  public Student getStudent(Long id) {
-    return studentRepository.findById(id)
-        .orElseThrow();
-  }
+  /**
+   * Get student by ID.
+   * @param id the student ID
+   * @return the student response
+   * @throws com.vois.internship.studentcourseregistration.exception.StudentNotFoundException if student not found
+   */
+  StudentResponse getStudentById(Long id);
 
-  public Student register(Student student) {
-    student.setRegistrationDate(Instant.now());
-    return studentRepository.save(student);
-  }
+  /**
+   * Fully update a student (PUT).
+   * @param id the student ID
+   * @param request the update request
+   * @return the updated student response
+   * @throws com.vois.internship.studentcourseregistration.exception.StudentNotFoundException if student not found
+   */
+  StudentResponse updateStudent(Long id, UpdateStudentRequest request);
+
+  /**
+   * Partially update a student (PATCH).
+   * @param id the student ID
+   * @param request the patch request
+   * @return the updated student response
+   * @throws com.vois.internship.studentcourseregistration.exception.StudentNotFoundException if student not found
+   */
+  StudentResponse patchStudent(Long id, PatchStudentRequest request);
+
+  /**
+   * Delete a student.
+   * @param id the student ID
+   * @throws com.vois.internship.studentcourseregistration.exception.StudentNotFoundException if student not found
+   * @throws com.vois.internship.studentcourseregistration.exception.ResourceDeletionConflictException if student has enrollment history
+   */
+  void deleteStudent(Long id);
 }

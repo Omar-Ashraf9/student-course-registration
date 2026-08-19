@@ -1,0 +1,900 @@
+openapi: 3.0.3
+info:
+  title: Student Course Registration API
+  version: 1.0.0
+  description: REST API for student course registration system with admin management
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: Students
+    description: Manage student accounts and profiles
+  - name: Courses
+    description: Manage course catalog records
+  - name: Enrollments
+    description: Manage student course enrollments
+  - name: Admins
+    description: Manage administrative users
+paths:
+  /students:
+    post:
+      tags: [Students]
+      summary: Create student
+      operationId: createStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    get:
+      tags: [Students]
+      summary: List all students
+      operationId: listStudents
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /students/{studentId}:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    get:
+      tags: [Students]
+      summary: Get student by ID
+      operationId: getStudentById
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags: [Students]
+      summary: Fully update student
+      operationId: updateStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStudentRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    patch:
+      tags: [Students]
+      summary: Partially update student
+      operationId: patchStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchStudentRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags: [Students]
+      summary: Delete student
+      operationId: deleteStudent
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /courses:
+    post:
+      tags: [Courses]
+      summary: Create course
+      operationId: createCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCourseRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    get:
+      tags: [Courses]
+      summary: List all courses
+      operationId: listCourses
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /courses/{courseId}:
+    parameters:
+      - $ref: '#/components/parameters/CourseId'
+    get:
+      tags: [Courses]
+      summary: Get course by ID
+      operationId: getCourseById
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags: [Courses]
+      summary: Fully update course
+      operationId: updateCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCourseRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    patch:
+      tags: [Courses]
+      summary: Partially update course
+      operationId: patchCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCourseRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags: [Courses]
+      summary: Delete course
+      operationId: deleteCourse
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /enrollments:
+    post:
+      tags: [Enrollments]
+      summary: Create enrollment
+      operationId: createEnrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnrollmentRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    get:
+      tags: [Enrollments]
+      summary: List all enrollments
+      operationId: listEnrollments
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrollmentResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /enrollments/{enrollmentId}:
+    parameters:
+      - $ref: '#/components/parameters/EnrollmentId'
+    get:
+      tags: [Enrollments]
+      summary: Get enrollment by ID
+      operationId: getEnrollmentById
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    patch:
+      tags: [Enrollments]
+      summary: Update enrollment status
+      operationId: patchEnrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchEnrollmentRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /students/{studentId}/enrollments:
+    parameters:
+      - $ref: '#/components/parameters/StudentId'
+    get:
+      tags: [Enrollments]
+      summary: Get student enrollments
+      operationId: listStudentEnrollments
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+  /admins:
+    post:
+      tags: [Admins]
+      summary: Create admin
+      operationId: createAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdminRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '409':
+          $ref: '#/components/responses/ConflictResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    get:
+      tags: [Admins]
+      summary: List all admins
+      operationId: listAdmins
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /admins/{adminId}:
+    parameters:
+      - $ref: '#/components/parameters/AdminId'
+    get:
+      tags: [Admins]
+      summary: Get admin by ID
+      operationId: getAdminById
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    put:
+      tags: [Admins]
+      summary: Fully update admin
+      operationId: updateAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAdminRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    patch:
+      tags: [Admins]
+      summary: Partially update admin
+      operationId: patchAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAdminRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+    delete:
+      tags: [Admins]
+      summary: Delete admin
+      operationId: deleteAdmin
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+
+components:
+  parameters:
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      description: Unique student identifier
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    CourseId:
+      name: courseId
+      in: path
+      required: true
+      description: Unique course identifier
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    EnrollmentId:
+      name: enrollmentId
+      in: path
+      required: true
+      description: Unique enrollment identifier
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    AdminId:
+      name: adminId
+      in: path
+      required: true
+      description: Unique admin identifier
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+  responses:
+    BadRequestResponse:
+      description: Invalid request or validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+    UnauthorizedResponse:
+      description: Authentication failed - no credentials provided or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ForbiddenResponse:
+      description: Authenticated but lacks required permissions for this operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundResponse:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictResponse:
+      description: Conflict with current resource state, such as duplicate email or code, full course capacity, or deletion blocked by related records
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerErrorResponse:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    CreateStudentRequest:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    UpdateStudentRequest:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    PatchStudentRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    StudentResponse:
+      type: object
+      additionalProperties: false
+      required: [id, firstName, lastName, email, registrationDate]
+      properties:
+        id:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        registrationDate:
+          type: string
+          format: date-time
+    CreateCourseRequest:
+      type: object
+      additionalProperties: false
+      required: [code, title, capacity]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 50
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+        capacity:
+          type: integer
+          minimum: 1
+    UpdateCourseRequest:
+      type: object
+      additionalProperties: false
+      required: [code, title, capacity]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 50
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+        capacity:
+          type: integer
+          minimum: 1
+    PatchCourseRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 50
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+        capacity:
+          type: integer
+          minimum: 1
+    CourseResponse:
+      type: object
+      additionalProperties: false
+      required: [id, code, title, capacity]
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+    CreateEnrollmentRequest:
+      type: object
+      additionalProperties: false
+      required: [studentId, courseId]
+      properties:
+        studentId:
+          type: integer
+          format: int64
+          minimum: 1
+        courseId:
+          type: integer
+          format: int64
+          minimum: 1
+    PatchEnrollmentRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, WITHDRAWN, COMPLETED]
+    EnrollmentResponse:
+      type: object
+      additionalProperties: false
+      required: [id, studentId, courseId, enrollmentDate, status]
+      properties:
+        id:
+          type: integer
+          format: int64
+        studentId:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        enrollmentDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [ACTIVE, WITHDRAWN, COMPLETED]
+    CreateAdminRequest:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    UpdateAdminRequest:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    PatchAdminRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+          maxLength: 255
+    AdminResponse:
+      type: object
+      additionalProperties: false
+      required: [id, firstName, lastName, email, registrationDate]
+      properties:
+        id:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        registrationDate:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [status, error, message, timestamp]
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+    ValidationErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [status, error, message, timestamp, errors]
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+  
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: |
+        HTTP Basic Authentication using email as username and password.
+        
+        Format: Authorization: Basic base64(email:password)
+        
+        Example:
+        - Email: ahmed@example.com
+        - Password: password123
+        - Header: Authorization: Basic YWhtZWRAZXhhbXBsZS5jb206cGFzc3dvcmQxMjM=
+        
+        Roles:
+        - ROLE_STUDENT: Student user
+        - ROLE_ADMIN: Administrator user
+
